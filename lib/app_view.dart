@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/home/views/home_screen.dart';
 
 class MyAppView extends StatelessWidget {
   const MyAppView({super.key});
@@ -11,13 +12,14 @@ class MyAppView extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.light(
-          surface: Colors.grey.shade100,        // Fixed: background -> surface
-          onSurface: Colors.black,              // Fixed: onBackground -> onSurface  
-          primary: const Color(0xFF00B2E7),     // Fixed: 0*FF -> 0xFF
-          secondary: const Color(0xFFE064F7),   // Fixed: 0*FF -> 0xFF
-          tertiary: const Color(0xFFFF8D6C),    // Fixed: 0*FF -> 0xFF
+          surface: Colors.grey.shade100,        
+          onSurface: Colors.black,              
+          primary: const Color(0xFF00B2E7),     
+          secondary: const Color(0xFFE064F7),   
+          tertiary: const Color(0xFFFF8D6C),    
         ),
       ),
+      home: HomeScreen(),
     );
     
   }
