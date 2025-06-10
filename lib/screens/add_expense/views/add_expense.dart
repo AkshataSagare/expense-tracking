@@ -64,11 +64,80 @@ class _AddExpenseState extends State<AddExpense> {
               TextFormField(
                 controller: categoryController,
                 textAlignVertical: TextAlignVertical.center,
+                readOnly: true,
+                onTap: () {
+                  
+                },
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
                     prefixIcon: Icon(Icons.list, size: 20, 
                      color: Colors.grey,
+                     ),
+                     suffixIcon: IconButton(
+                      onPressed:() {
+                        showDialog(
+                          context: context, 
+                          builder: (ctx) {
+                            return AlertDialog(
+                              title: Text(
+                                'Create a Category'
+                              ),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextFormField(
+                                    //controller: dateController,
+                                    textAlignVertical: TextAlignVertical.center,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      hintText: 'Name',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide.none
+                                      )
+                                    ),
+                                  ),
+                                  SizedBox(height: 16,),
+                                  TextFormField(
+                                    //controller: dateController,
+                                    textAlignVertical: TextAlignVertical.center,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      hintText: 'Icon',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide.none
+                                      )
+                                    ),
+                                  ),
+                                  SizedBox(height: 16,),
+                                  TextFormField(
+                                    //controller: dateController,
+                                    textAlignVertical: TextAlignVertical.center,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      hintText: 'Color',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide.none
+                                      )
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        );
+                      } ,
+                      icon: Icon(
+                        Icons.add, 
+                        size: 22, 
+                        color: Colors.grey,
+                      ),
                      ),
                      hintText: 'Catagory',
                     border: OutlineInputBorder(
