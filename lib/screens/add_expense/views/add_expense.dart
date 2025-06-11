@@ -37,6 +37,9 @@ class _AddExpenseState extends State<AddExpense> {
     'Health' : [
       {'icon': Icons.health_and_safety, 'name': 'Health'},
     ],
+    'Education' : [
+      {'icon': Icons.library_books, 'name': 'Education'},
+    ],
     'Others' : [
       {'icon': Icons.local_gas_station_sharp, 'name': 'Petrol'},
       {'icon': Icons.movie, 'name': 'Movie'},
