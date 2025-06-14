@@ -1,5 +1,9 @@
+import 'package:expense_repository/expense_repository.dart';
+import 'package:expense_tracking/screens/add_expense/bloc/create_categorybloc/create_category_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 
 class AddExpense extends StatefulWidget {
   const AddExpense({super.key});
@@ -26,25 +30,25 @@ class _AddExpenseState extends State<AddExpense> {
       {'icon': Icons.book, 'name': 'Books'},
       {'icon': Icons.edit, 'name': 'Stationary'},
     ],
-    'Travel' : [
+    'Travel': [
       {'icon': Icons.mode_of_travel, 'name': 'Travel'},
     ],
-    'Bills' : [
-      {'icon': Icons.smartphone, 'name': 'Phone Reacharge', },
+    'Bills': [
+      {'icon': Icons.smartphone, 'name': 'Phone Reacharge'},
       {'icon': Icons.lightbulb, 'name': 'Light Bill'},
       {'icon': Icons.gas_meter, 'name': 'Gas Bill'},
     ],
-    'Health' : [
+    'Health': [
       {'icon': Icons.health_and_safety, 'name': 'Health'},
     ],
-    'Education' : [
+    'Education': [
       {'icon': Icons.library_books, 'name': 'Education'},
     ],
-    'Others' : [
+    'Others': [
       {'icon': Icons.local_gas_station_sharp, 'name': 'Petrol'},
       {'icon': Icons.movie, 'name': 'Movie'},
       {'icon': Icons.currency_rupee, 'name': 'Other'},
-    ]
+    ],
   };
 
   @override
@@ -62,6 +66,9 @@ class _AddExpenseState extends State<AddExpense> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
+        //TextEditingController expenseController = TextEditingController();
+        //TextEditingController categoryController = TextEditingController();
+        //TextEditingController dateController = TextEditingController();
         return Container(
           padding: EdgeInsets.all(16),
           height: 400,
@@ -87,7 +94,11 @@ class _AddExpenseState extends State<AddExpense> {
                       child: Icon(item['icon'], color: Colors.blue),
                     ),
                     SizedBox(height: 5),
-                    Text(item['name'], textAlign: TextAlign.center,style: TextStyle(fontSize: 12)),
+                    Text(
+                      item['name'],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
               );
@@ -104,9 +115,7 @@ class _AddExpenseState extends State<AddExpense> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-        ),
+        appBar: AppBar(backgroundColor: Theme.of(context).colorScheme.surface),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -125,7 +134,11 @@ class _AddExpenseState extends State<AddExpense> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    prefixIcon: Icon(Icons.currency_rupee, size: 20, color: Colors.grey),
+                    prefixIcon: Icon(
+                      Icons.currency_rupee,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
@@ -166,7 +179,9 @@ class _AddExpenseState extends State<AddExpense> {
                   );
                   if (newDate != null) {
                     setState(() {
-                      dateController.text = DateFormat('dd/MM/yyyy').format(newDate);
+                      dateController.text = DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(newDate);
                       selectedDate = newDate;
                     });
                   }
@@ -174,7 +189,11 @@ class _AddExpenseState extends State<AddExpense> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
-                  prefixIcon: Icon(Icons.date_range, size: 20, color: Colors.grey),
+                  prefixIcon: Icon(
+                    Icons.date_range,
+                    size: 20,
+                    color: Colors.grey,
+                  ),
                   hintText: 'Date',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -187,7 +206,19 @@ class _AddExpenseState extends State<AddExpense> {
                 width: double.infinity,
                 height: kToolbarHeight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    if (selectedCategoryIcon != null) {
+                      Category category = Category.empty;
+                      category.categoryId = Uuid().v1();
+                      category.name = categoryController.text;
+                      category.icon = CategoryEntity.getIconString(
+                        selectedCategoryIcon!,
+                      );
+                      context.read<CreateCategoryBloc>().add(CreateCategory(category));
+                    } else {
+                      // if icon not provided code goes here
+                    }
+                  },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
@@ -199,7 +230,7 @@ class _AddExpenseState extends State<AddExpense> {
                     style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
