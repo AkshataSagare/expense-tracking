@@ -1,5 +1,6 @@
 import 'package:expense_repository/expense_repository.dart';
 import 'package:expense_tracking/screens/add_expense/bloc/create_categorybloc/create_category_bloc.dart';
+import 'package:expense_tracking/screens/add_expense/bloc/get_categories_bloc/get_categories_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -66,9 +67,6 @@ class _AddExpenseState extends State<AddExpense> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        //TextEditingController expenseController = TextEditingController();
-        //TextEditingController categoryController = TextEditingController();
-        //TextEditingController dateController = TextEditingController();
         return Container(
           padding: EdgeInsets.all(16),
           height: 400,
@@ -160,8 +158,46 @@ class _AddExpenseState extends State<AddExpense> {
                       : Icon(Icons.list, size: 20, color: Colors.grey),
                   hintText: 'Category',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
                     borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              Container(
+                height: 200,
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(12),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: BlocBuilder<GetCategoriesBloc, GetCategoriesState>(
+                    builder: (context, state) {
+                      if(state is GetCategoriesSuccess) {
+                        return ListView.builder(
+                          itemCount: state.categories.length,
+                          itemBuilder: (context, int i) {
+                            return Card(
+                              child: ListTile(
+                                leading: Icon(CategoryEntity.getIcon(state.categories[i].icon)),
+                                title: Text(
+                                  state.categories[i].name
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      } else{
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
                   ),
                 ),
               ),
@@ -214,7 +250,9 @@ class _AddExpenseState extends State<AddExpense> {
                       category.icon = CategoryEntity.getIconString(
                         selectedCategoryIcon!,
                       );
-                      context.read<CreateCategoryBloc>().add(CreateCategory(category));
+                      context.read<CreateCategoryBloc>().add(
+                        CreateCategory(category),
+                      );
                     } else {
                       // if icon not provided code goes here
                     }
