@@ -9,6 +9,6 @@ sealed class CreateCategoryState extends Equatable {
 
 final class CreateCategoryInitial extends CreateCategoryState {}
 
-final class CreateCategoryInitialFailure extends CreateCategoryState {}
-final class CreateCategoryInitialLoading extends CreateCategoryState {}
-final class CreateCategoryInitialSuccess extends CreateCategoryState {}
+final class CreateCategoryFailure extends CreateCategoryState {}
+final class CreateCategoryLoading extends CreateCategoryState {}
+final class CreateCategorySuccess extends CreateCategoryState {}

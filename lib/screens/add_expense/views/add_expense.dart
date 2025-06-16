@@ -178,24 +178,24 @@ class _AddExpenseState extends State<AddExpense> {
                   padding: const EdgeInsets.all(8.0),
                   child: BlocBuilder<GetCategoriesBloc, GetCategoriesState>(
                     builder: (context, state) {
-                      if(state is GetCategoriesSuccess) {
+                      if (state is GetCategoriesSuccess) {
                         return ListView.builder(
                           itemCount: state.categories.length,
                           itemBuilder: (context, int i) {
                             return Card(
                               child: ListTile(
-                                leading: Icon(CategoryEntity.getIcon(state.categories[i].icon)),
-                                title: Text(
-                                  state.categories[i].name
+                                leading: Icon(
+                                  CategoryEntity.getIcon(
+                                    state.categories[i].icon,
+                                  ),
                                 ),
+                                title: Text(state.categories[i].name),
                               ),
                             );
                           },
                         );
-                      } else{
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
+                      } else {
+                        return Center(child: CircularProgressIndicator());
                       }
                     },
                   ),
@@ -238,34 +238,66 @@ class _AddExpenseState extends State<AddExpense> {
                 ),
               ),
               SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: kToolbarHeight,
-                child: TextButton(
-                  onPressed: () {
-                    if (selectedCategoryIcon != null) {
-                      Category category = Category.empty;
-                      category.categoryId = Uuid().v1();
-                      category.name = categoryController.text;
-                      category.icon = CategoryEntity.getIconString(
-                        selectedCategoryIcon!,
+              BlocListener<CreateCategoryBloc, CreateCategoryState>(
+                listener: (context, state) {
+                  if (state is CreateCategorySuccess) {
+                    context.read<GetCategoriesBloc>().add(GetCategories());
+                    setState(() {
+                      categoryController.clear();
+                      selectedCategoryIcon = null;
+                    });
+                  } else if (state is CreateCategoryFailure) {
+                    
+                  }
+                },
+                child: SizedBox(
+                  width: double.infinity,
+                  height: kToolbarHeight,
+                  child: BlocBuilder<CreateCategoryBloc, CreateCategoryState>(
+                    builder: (context, state) {
+                      return TextButton(
+                        onPressed: () {
+                          if (selectedCategoryIcon != null) {
+                            Category category = Category.empty;
+                            category.categoryId = Uuid().v1();
+                            category.name = categoryController.text;
+                            category.icon = CategoryEntity.getIconString(
+                              selectedCategoryIcon!,
+                            );
+                            context.read<CreateCategoryBloc>().add(
+                              CreateCategory(category),
+                            );
+                          } else {}
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: state is CreateCategoryLoading
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                'Save',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                ),
+                              ),
                       );
-                      context.read<CreateCategoryBloc>().add(
-                        CreateCategory(category),
-                      );
-                    } else {
-                      // if icon not provided code goes here
-                    }
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(fontSize: 20, color: Colors.white),
+                    },
                   ),
                 ),
               ),

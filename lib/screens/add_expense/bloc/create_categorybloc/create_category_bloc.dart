@@ -11,9 +11,9 @@ class CreateCategoryBloc extends Bloc<CreateCategoryEvent, CreateCategoryState> 
     on<CreateCategory>((event, emit) async {
       try{
         await expenseRepository.createCategory(event.category);
-        emit(CreateCategoryInitialSuccess());
+        emit(CreateCategorySuccess());
       }catch (e) {
-        emit(CreateCategoryInitialFailure());
+        emit(CreateCategoryFailure());
       }
     });
   }
