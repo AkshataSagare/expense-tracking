@@ -2,7 +2,6 @@ import 'package:expense_repository/expense_repository.dart';
 import 'package:expense_tracking/screens/add_expense/bloc/create_categorybloc/create_category_bloc.dart';
 import 'package:expense_tracking/screens/add_expense/bloc/create_expense_bloc/create_expense_bloc.dart';
 import 'package:expense_tracking/screens/add_expense/bloc/get_categories_bloc/get_categories_bloc.dart';
-import 'package:expense_tracking/screens/home/blocs/get_expenses_bloc/get_expenses_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -118,7 +117,7 @@ class _AddExpenseState extends State<AddExpense> {
     return BlocListener<CreateExpenseBloc, CreateExpenseState>(
       listener: (context, state) {
         if(state is CreateExpenseSuccess) {
-          Navigator.pop(context);
+          Navigator.pop(context, expense);
         }else if(state is CreateExpenseLoading){
           setState(() {
             isLoading = true;
