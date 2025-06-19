@@ -1,6 +1,8 @@
 import 'package:expense_repository/expense_repository.dart';
 import 'package:expense_tracking/screens/add_expense/bloc/create_categorybloc/create_category_bloc.dart';
+import 'package:expense_tracking/screens/add_expense/bloc/create_expense_bloc/create_expense_bloc.dart';
 import 'package:expense_tracking/screens/add_expense/bloc/get_categories_bloc/get_categories_bloc.dart';
+import 'package:expense_tracking/screens/home/blocs/get_expenses_bloc/get_expenses_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -17,8 +19,10 @@ class _AddExpenseState extends State<AddExpense> {
   TextEditingController expenseController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
   TextEditingController dateController = TextEditingController();
-  DateTime selectedDate = DateTime.now();
+  //DateTime selectedDate = DateTime.now();
   IconData? selectedCategoryIcon;
+  late Expense expense;
+  bool isLoading = false;
 
   final Map<String, List<Map<String, dynamic>>> categoryIcons = {
     'Food': [
@@ -55,6 +59,8 @@ class _AddExpenseState extends State<AddExpense> {
   @override
   void initState() {
     dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    expense = Expense.empty;
+    expense.expenseId = const Uuid().v1();
     super.initState();
   }
 
@@ -109,199 +115,235 @@ class _AddExpenseState extends State<AddExpense> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: AppBar(backgroundColor: Theme.of(context).colorScheme.surface),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                'Add Expenses',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 32),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.7,
-                child: TextFormField(
-                  controller: expenseController,
+    return BlocListener<CreateExpenseBloc, CreateExpenseState>(
+      listener: (context, state) {
+        if(state is CreateExpenseSuccess) {
+          Navigator.pop(context);
+        }else if(state is CreateExpenseLoading){
+          setState(() {
+            isLoading = true;
+          });
+        }
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Add Expenses',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+                ),
+                SizedBox(height: 32),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.7,
+                  child: TextFormField(
+                    controller: expenseController,
+                    textAlignVertical: TextAlignVertical.center,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
+                      prefixIcon: Icon(
+                        Icons.currency_rupee,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: categoryController,
                   textAlignVertical: TextAlignVertical.center,
+                  readOnly: true,
+                  onTap: () => showIconPicker(context),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    prefixIcon: Icon(
-                      Icons.currency_rupee,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
+                    prefixIcon: expense.category == Category.empty
+                        ? selectedCategoryIcon != null
+                              ? Icon(
+                                  selectedCategoryIcon,
+                                  size: 20,
+                                  color: Colors.grey,
+                                )
+                              : Icon(Icons.list, size: 20, color: Colors.grey)
+                        : Icon(CategoryEntity.getIcon(expense.category.icon)),
+                    hintText: 'Category',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
                       borderSide: BorderSide.none,
                     ),
                   ),
                 ),
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: categoryController,
-                textAlignVertical: TextAlignVertical.center,
-                readOnly: true,
-                onTap: () => showIconPicker(context),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: selectedCategoryIcon != null
-                      ? Icon(selectedCategoryIcon, size: 20, color: Colors.grey)
-                      : Icon(Icons.list, size: 20, color: Colors.grey),
-                  hintText: 'Category',
-                  border: OutlineInputBorder(
+                Container(
+                  height: 200,
+                  width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
                     borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(12),
+                      bottom: Radius.circular(12),
                     ),
-                    borderSide: BorderSide.none,
                   ),
-                ),
-              ),
-              Container(
-                height: 200,
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(12),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: BlocBuilder<GetCategoriesBloc, GetCategoriesState>(
-                    builder: (context, state) {
-                      if (state is GetCategoriesSuccess) {
-                        return ListView.builder(
-                          itemCount: state.categories.length,
-                          itemBuilder: (context, int i) {
-                            return Card(
-                              child: ListTile(
-                                leading: Icon(
-                                  CategoryEntity.getIcon(
-                                    state.categories[i].icon,
-                                  ),
-                                ),
-                                title: Text(state.categories[i].name),
-                              ),
-                            );
-                          },
-                        );
-                      } else {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: dateController,
-                textAlignVertical: TextAlignVertical.center,
-                readOnly: true,
-                onTap: () async {
-                  DateTime? newDate = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now().add(Duration(days: 365)),
-                  );
-                  if (newDate != null) {
-                    setState(() {
-                      dateController.text = DateFormat(
-                        'dd/MM/yyyy',
-                      ).format(newDate);
-                      selectedDate = newDate;
-                    });
-                  }
-                },
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: Icon(
-                    Icons.date_range,
-                    size: 20,
-                    color: Colors.grey,
-                  ),
-                  hintText: 'Date',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 32),
-              BlocListener<CreateCategoryBloc, CreateCategoryState>(
-                listener: (context, state) {
-                  if (state is CreateCategorySuccess) {
-                    context.read<GetCategoriesBloc>().add(GetCategories());
-                    setState(() {
-                      categoryController.clear();
-                      selectedCategoryIcon = null;
-                    });
-                  } else if (state is CreateCategoryFailure) {
-                    
-                  }
-                },
-                child: SizedBox(
-                  width: double.infinity,
-                  height: kToolbarHeight,
-                  child: BlocBuilder<CreateCategoryBloc, CreateCategoryState>(
-                    builder: (context, state) {
-                      return TextButton(
-                        onPressed: () {
-                          if (selectedCategoryIcon != null) {
-                            Category category = Category.empty;
-                            category.categoryId = Uuid().v1();
-                            category.name = categoryController.text;
-                            category.icon = CategoryEntity.getIconString(
-                              selectedCategoryIcon!,
-                            );
-                            context.read<CreateCategoryBloc>().add(
-                              CreateCategory(category),
-                            );
-                          } else {}
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: state is CreateCategoryLoading
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: BlocBuilder<GetCategoriesBloc, GetCategoriesState>(
+                      builder: (context, state) {
+                        if (state is GetCategoriesSuccess) {
+                          return ListView.builder(
+                            itemCount: state.categories.length,
+                            itemBuilder: (context, int i) {
+                              return Card(
+                                child: ListTile(
+                                  onTap: () {
+                                    setState(() {
+                                      expense.category = state.categories[i];
+                                      categoryController.text =
+                                          expense.category.name;
+                                    });
+                                  },
+                                  leading: Icon(
+                                    CategoryEntity.getIcon(
+                                      state.categories[i].icon,
                                     ),
                                   ),
-                                ],
-                              )
-                            : Text(
-                                'Save',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
+                                  title: Text(state.categories[i].name),
                                 ),
-                              ),
-                      );
-                    },
+                              );
+                            },
+                          );
+                        } else {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ],
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: dateController,
+                  textAlignVertical: TextAlignVertical.center,
+                  readOnly: true,
+                  onTap: () async {
+                    DateTime? newDate = await showDatePicker(
+                      context: context,
+                      initialDate: expense.date,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now().add(Duration(days: 365)),
+                    );
+                    if (newDate != null) {
+                      setState(() {
+                        dateController.text = DateFormat(
+                          'dd/MM/yyyy',
+                        ).format(newDate);
+                        //selectedDate = newDate;
+                        expense.date = newDate;
+                      });
+                    }
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: Icon(
+                      Icons.date_range,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                    hintText: 'Date',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32),
+                BlocListener<CreateCategoryBloc, CreateCategoryState>(
+                  listener: (context, state) {
+                    if (state is CreateCategorySuccess) {
+                      context.read<GetCategoriesBloc>().add(GetCategories());
+                      setState(() {
+                        categoryController.clear();
+                        selectedCategoryIcon = null;
+                      });
+                    } else if (state is CreateCategoryFailure) {}
+                  },
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: kToolbarHeight,
+                    child: BlocBuilder<CreateCategoryBloc, CreateCategoryState>(
+                      builder: (context, state) {
+                        return isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : TextButton(
+                            onPressed: () {
+                              if (selectedCategoryIcon != null) {
+                                Category category = Category.empty;
+                                category.categoryId = Uuid().v1();
+                                category.name = categoryController.text;
+                                category.icon = CategoryEntity.getIconString(
+                                  selectedCategoryIcon!,
+                                );
+                                context.read<CreateCategoryBloc>().add(
+                                  CreateCategory(category),
+                                );
+                              } else {}
+                              ;
+                              setState(() {
+                                expense.amount = int.parse(
+                                  expenseController.text,
+                                );
+                              });
+                              context.read<CreateExpenseBloc>().add(
+                                CreateExpense(expense),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: state is CreateCategoryLoading
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Text(
+                                    'Save',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                          );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
