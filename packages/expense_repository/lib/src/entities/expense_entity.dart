@@ -1,18 +1,18 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expense_repository/expense_repository.dart';
-
-import '../models/models.dart';
+import 'package:flutter/material.dart';
 
 class ExpenseEntity {
   String expenseId;
   Category category;
   DateTime date;
+  TimeOfDay time;
   int amount;
 
   ExpenseEntity({
     required this.expenseId,
     required this.category,
     required this.date,
+    required this.time,
     required this.amount,
 });
 
@@ -20,7 +20,8 @@ class ExpenseEntity {
     return {
       'expenseId': expenseId,
       'category': category.toEntity().toDocument(),
-      'date': date,
+      'date': DateTime.now().toIso8601String(),
+      'time': TimeOfDay.now(),
       'amount': amount,
     };
   }
@@ -29,7 +30,8 @@ class ExpenseEntity {
     return ExpenseEntity(
       expenseId: doc['expenseId'],
       category: Category.fromEntity(CategoryEntity.fromDocument(doc['category'])),
-      date:( doc['date'] as Timestamp).toDate(),
+      date:DateTime.parse(doc['date']).toLocal(),
+      time:,
       amount: doc['amount'],
     );
   }

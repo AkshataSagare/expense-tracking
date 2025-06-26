@@ -18,10 +18,12 @@ class _AddExpenseState extends State<AddExpense> {
   TextEditingController expenseController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
   TextEditingController dateController = TextEditingController();
+  TextEditingController timeController = TextEditingController();
   //DateTime selectedDate = DateTime.now();
   IconData? selectedCategoryIcon;
   late Expense expense;
   bool isLoading = false;
+  Category category = Category.empty;
 
   final Map<String, List<Map<String, dynamic>>> categoryIcons = {
     'Food': [
@@ -58,6 +60,8 @@ class _AddExpenseState extends State<AddExpense> {
   @override
   void initState() {
     dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    //DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, DateTime.now().hour, DateTime.now().minute);
+
     expense = Expense.empty;
     expense.expenseId = const Uuid().v1();
     super.initState();
@@ -117,7 +121,25 @@ class _AddExpenseState extends State<AddExpense> {
     return BlocListener<CreateExpenseBloc, CreateExpenseState>(
       listener: (context, state) {
         if(state is CreateExpenseSuccess) {
-          Navigator.pop(context, expense);
+          final savedExpense = Expense(
+            expenseId: expense.expenseId,
+            category: expense.category,
+            amount: expense.amount,
+            date: expense.date,
+            time: expense.time
+          );
+          setState(() {
+            expense = Expense.empty;
+            expense.expenseId = const Uuid().v1();
+            expense.category = Category.empty;
+            expense.date = DateTime.now();
+            expense.time = TimeOfDay.now();
+            expenseController.clear();
+            categoryController.clear();
+            dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+            selectedCategoryIcon = null;
+          });
+          Navigator.pop(context, savedExpense);
         }else if(state is CreateExpenseLoading){
           setState(() {
             isLoading = true;
@@ -246,10 +268,49 @@ class _AddExpenseState extends State<AddExpense> {
                     if (newDate != null) {
                       setState(() {
                         dateController.text = DateFormat(
-                          'dd/MM/yyyy',
+                          'dd/MM/yyyy hh:mm',
                         ).format(newDate);
                         //selectedDate = newDate;
                         expense.date = newDate;
+                      });
+                    }
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: Icon(
+                      Icons.date_range,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                    hintText: 'Date',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: timeController,
+                  textAlignVertical: TextAlignVertical.center,
+                  readOnly: true,
+                  onTap: () async {
+                    TimeOfDay? selectedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (selectedTime!= null) {
+                      setState(() {
+                        expense.time = selectedTime;                     
+                        final newDateTime = DateTime(
+                          expense.date.year,
+                          expense.date.month,
+                          expense.date.day,
+                          selectedTime.hour,
+                          selectedTime.minute,
+                        );   
+                        timeController.text = DateFormat('hh:mm').format(newDateTime);
                       });
                     }
                   },
@@ -289,7 +350,6 @@ class _AddExpenseState extends State<AddExpense> {
                           : TextButton(
                             onPressed: () {
                               if (selectedCategoryIcon != null) {
-                                Category category = Category.empty;
                                 category.categoryId = Uuid().v1();
                                 category.name = categoryController.text;
                                 category.icon = CategoryEntity.getIconString(
@@ -299,7 +359,6 @@ class _AddExpenseState extends State<AddExpense> {
                                   CreateCategory(category),
                                 );
                               } else {}
-                              ;
                               setState(() {
                                 expense.amount = int.parse(
                                   expenseController.text,

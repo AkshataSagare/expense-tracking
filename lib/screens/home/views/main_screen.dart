@@ -281,7 +281,7 @@ class MainScreen extends StatelessWidget {
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  DateFormat('dd/MM/yyyy').format(expenses[i].date),
+                                  DateFormat('dd/MM/yyyy hh:mm').format(expenses[i].date),
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Theme.of(context).colorScheme.outline,
