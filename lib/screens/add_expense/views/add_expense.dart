@@ -17,9 +17,6 @@ class AddExpense extends StatefulWidget {
 class _AddExpenseState extends State<AddExpense> {
   TextEditingController expenseController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
-  TextEditingController dateController = TextEditingController();
-  TextEditingController timeController = TextEditingController();
-  //DateTime selectedDate = DateTime.now();
   IconData? selectedCategoryIcon;
   late Expense expense;
   bool isLoading = false;
@@ -59,10 +56,8 @@ class _AddExpenseState extends State<AddExpense> {
 
   @override
   void initState() {
-    dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
-    //DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, DateTime.now().hour, DateTime.now().minute);
-
     expense = Expense.empty;
+    expense.date = DateTime.now();
     expense.expenseId = const Uuid().v1();
     super.initState();
   }
@@ -120,27 +115,24 @@ class _AddExpenseState extends State<AddExpense> {
   Widget build(BuildContext context) {
     return BlocListener<CreateExpenseBloc, CreateExpenseState>(
       listener: (context, state) {
-        if(state is CreateExpenseSuccess) {
+        if (state is CreateExpenseSuccess) {
           final savedExpense = Expense(
             expenseId: expense.expenseId,
             category: expense.category,
             amount: expense.amount,
             date: expense.date,
-            time: expense.time
           );
           setState(() {
             expense = Expense.empty;
             expense.expenseId = const Uuid().v1();
             expense.category = Category.empty;
             expense.date = DateTime.now();
-            expense.time = TimeOfDay.now();
             expenseController.clear();
             categoryController.clear();
-            dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
             selectedCategoryIcon = null;
           });
           Navigator.pop(context, savedExpense);
-        }else if(state is CreateExpenseLoading){
+        } else if (state is CreateExpenseLoading) {
           setState(() {
             isLoading = true;
           });
@@ -192,15 +184,15 @@ class _AddExpenseState extends State<AddExpense> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    prefixIcon: expense.category == Category.empty
-                        ? selectedCategoryIcon != null
-                              ? Icon(
-                                  selectedCategoryIcon,
-                                  size: 20,
-                                  color: Colors.grey,
-                                )
-                              : Icon(Icons.list, size: 20, color: Colors.grey)
-                        : Icon(CategoryEntity.getIcon(expense.category.icon)),
+                    prefixIcon: Icon(
+                      selectedCategoryIcon ??(
+                        expense.category != Category.empty
+                        ? CategoryEntity.getIcon(expense.category.icon)
+                        : Icons.list
+                        ),
+                      size: 20,
+                      color: Colors.grey,
+                    ),
                     hintText: 'Category',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.vertical(
@@ -254,10 +246,7 @@ class _AddExpenseState extends State<AddExpense> {
                   ),
                 ),
                 SizedBox(height: 16),
-                TextFormField(
-                  controller: dateController,
-                  textAlignVertical: TextAlignVertical.center,
-                  readOnly: true,
+                InkWell(
                   onTap: () async {
                     DateTime? newDate = await showDatePicker(
                       context: context,
@@ -267,138 +256,121 @@ class _AddExpenseState extends State<AddExpense> {
                     );
                     if (newDate != null) {
                       setState(() {
-                        dateController.text = DateFormat(
-                          'dd/MM/yyyy hh:mm',
-                        ).format(newDate);
-                        //selectedDate = newDate;
                         expense.date = newDate;
                       });
                     }
                   },
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    prefixIcon: Icon(
-                      Icons.date_range,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
-                    hintText: 'Date',
-                    border: OutlineInputBorder(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.date_range, size: 20, color: Colors.grey),
+                        SizedBox(width: 18),
+                        Expanded(
+                          child: Text(
+                            DateFormat('dd MMM yyyy').format(expense.date),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
                 SizedBox(height: 16),
-                TextFormField(
-                  controller: timeController,
-                  textAlignVertical: TextAlignVertical.center,
-                  readOnly: true,
+                InkWell(
                   onTap: () async {
                     TimeOfDay? selectedTime = await showTimePicker(
                       context: context,
                       initialTime: TimeOfDay.now(),
                     );
-                    if (selectedTime!= null) {
+                    if (selectedTime != null) {
                       setState(() {
-                        expense.time = selectedTime;                     
-                        final newDateTime = DateTime(
+                        expense.date = DateTime(
                           expense.date.year,
                           expense.date.month,
                           expense.date.day,
                           selectedTime.hour,
                           selectedTime.minute,
-                        );   
-                        timeController.text = DateFormat('hh:mm').format(newDateTime);
+                        );
                       });
                     }
                   },
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    prefixIcon: Icon(
-                      Icons.date_range,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
-                    hintText: 'Date',
-                    border: OutlineInputBorder(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.watch_later_outlined,
+                          size: 20,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(width: 18),
+                        Expanded(
+                          child: Text(
+                            DateFormat('hh:mm').format(expense.date),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 32),
-                BlocListener<CreateCategoryBloc, CreateCategoryState>(
-                  listener: (context, state) {
-                    if (state is CreateCategorySuccess) {
-                      context.read<GetCategoriesBloc>().add(GetCategories());
-                      setState(() {
-                        categoryController.clear();
-                        selectedCategoryIcon = null;
-                      });
-                    } else if (state is CreateCategoryFailure) {}
-                  },
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: kToolbarHeight,
-                    child: BlocBuilder<CreateCategoryBloc, CreateCategoryState>(
-                      builder: (context, state) {
-                        return isLoading
-                          ? Center(child: CircularProgressIndicator())
-                          : TextButton(
-                            onPressed: () {
-                              if (selectedCategoryIcon != null) {
-                                category.categoryId = Uuid().v1();
-                                category.name = categoryController.text;
-                                category.icon = CategoryEntity.getIconString(
-                                  selectedCategoryIcon!,
-                                );
-                                context.read<CreateCategoryBloc>().add(
-                                  CreateCategory(category),
-                                );
-                              } else {}
-                              setState(() {
-                                expense.amount = int.parse(
-                                  expenseController.text,
-                                );
-                              });
-                              context.read<CreateExpenseBloc>().add(
-                                CreateExpense(expense),
+                SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: kToolbarHeight,
+                  child: isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : TextButton(
+                          onPressed: () {
+                            if (selectedCategoryIcon != null) {
+                              category.categoryId = Uuid().v1();
+                              category.name = categoryController.text;
+                              category.icon = CategoryEntity.getIconString(
+                                selectedCategoryIcon!,
                               );
-                            },
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              context.read<CreateCategoryBloc>().add(
+                                CreateCategory(category),
+                              );
+                            } else {}
+                            setState(() {
+                              expense.amount = int.parse(
+                                expenseController.text,
+                              );
+                            });
+                            context.read<CreateExpenseBloc>().add(
+                              CreateExpense(expense),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: state is CreateCategoryLoading
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Text(
-                                    'Save',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          );
-                      },
-                    ),
-                  ),
+                          ),
+                          child: Text(
+                            'Save',
+                            style: TextStyle(fontSize: 20, color: Colors.white),
+                          ),
+                        ),
                 ),
               ],
             ),
