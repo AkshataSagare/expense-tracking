@@ -1,6 +1,6 @@
 name: expense_repository
 description: The Repo that handles expense
-pub;ish_to: 'none'
+publish_to: 'none'
 version: 0.0.1
 
 environment:
